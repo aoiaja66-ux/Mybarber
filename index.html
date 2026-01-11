@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BarberShop - Abdulboriy</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root { --gold: #D4AF37; --dark: #121212; --card: #1E1E1E; --text: #FFFFFF; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--dark); color: var(--text); margin: 0; padding: 15px; padding-bottom: 120px; }
+        
+        .profile-btn { background: none; border: 1px solid var(--gold); color: var(--gold); padding: 8px 15px; border-radius: 10px; font-size: 12px; float: right; margin-bottom: 10px; }
+        .master-card { clear: both; background: var(--card); border-radius: 15px; padding: 15px; text-align: center; border: 1px solid var(--gold); margin-bottom: 20px; }
+        .avatar { width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--gold); object-fit: cover; }
+
+        #cabinet-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; padding: 20px; box-sizing: border-box; overflow-y: auto; }
+        .cabinet-content { background: var(--card); border: 1px solid var(--gold); border-radius: 15px; padding: 20px; position: relative; max-width: 500px; margin: 50px auto; }
+        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 24px; color: var(--gold); cursor: pointer; }
+        .scheme-box { background: #2c2c2c; padding: 15px; border-radius: 10px; border-left: 4px solid var(--gold); margin-top: 15px; }
+
+        .lookbook-gallery { display: flex; overflow-x: auto; gap: 15px; padding-bottom: 10px; margin-bottom: 20px; }
+        .lookbook-item { min-width: 200px; background: var(--card); border-radius: 12px; overflow: hidden; border: 1px solid #333; text-align: center; }
+        .lookbook-item img { width: 100%; height: 150px; object-fit: cover; border-bottom: 1px solid #333; }
+        .lookbook-item button { background: var(--gold); color: black; border: none; padding: 8px 15px; border-radius: 8px; margin: 10px 0; font-weight: bold; font-size: 13px; }
+
+        .section-title { font-size: 14px; margin: 15px 0 10px; color: var(--gold); text-transform: uppercase; font-weight: bold; }
+        .calendar { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; }
+        .day-card { background: var(--card); min-width: 55px; padding: 10px; border-radius: 10px; text-align: center; border: 1px solid #333; font-size: 13px; color: white; }
+        .day-card.active { border-color: var(--gold); background: rgba(212, 175, 55, 0.1); }
+        
+        .time-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .time-slot { background: var(--card); padding: 10px 5px; border-radius: 8px; text-align: center; border: 1px solid #333; font-size: 12px; }
+        .time-slot.selected { background: var(--gold); color: black; font-weight: bold; }
+
+        .people-selector { display: flex; gap: 10px; margin-bottom: 20px; }
+        .count-btn { flex: 1; background: var(--card); border: 1px solid #333; padding: 10px; border-radius: 10px; text-align: center; color: white; }
+        .count-btn.active { border-color: var(--gold); background: rgba(212, 175, 55, 0.1); }
+
+        .service-card { background: var(--card); border: 1px solid #333; border-radius: 12px; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .service-card.selected { border-color: var(--gold); background: rgba(212, 175, 55, 0.05); }
+        .service-info h3 { margin: 0; font-size: 15px; }
+        .service-info p { margin: 3px 0 0; color: var(--gold); font-size: 14px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <button class="profile-btn" onclick="toggleCabinet(true)">👤 ЛК</button>
+
+    <div class="master-card">
+        <img src="https://via.placeholder.com/80" alt="Абдулборий" class="avatar">
+        <div style="font-size: 18px; font-weight: bold; margin-top: 10px;">Абдулборий Туланов</div>
+        <div style="color: #aaa; font-size: 13px;">Топ-барбер • Ташкент</div>
+        <div style="color: var(--gold); margin-top: 5px;">★★★★★ 5.0</div>
+    </div>
+
+    <div id="cabinet-modal">
+        <div class="cabinet-content">
+            <span class="close-btn" onclick="toggleCabinet(false)">&times;</span>
+            <h2 style="color: var(--gold);">Мой кабинет</h2>
+            <div class="scheme-box">
+                <p id="client-scheme">«Насадка 3мм, переход высокий (High Fade), пробор слева. Борода — контур опаской.»</p>
+            </div>
+            <p style="font-size: 12px; color: #888; margin-top: 20px;">* Мастер обновляет схему после каждого визита.</p>
+        </div>
+    </div>
+
+    <div class="section-title">✨ Наши работы (Lookbook)</div>
+    <div class="lookbook-gallery">
+        <div class="lookbook-item">
+            <img src="https://via.placeholder.com/200x150/D4AF37/000000?text=Fade" alt="Fade">
+            <button onclick="selectServiceByName('Мужская стрижка')">Хочу так же</button>
+        </div>
+        <div class="lookbook-item">
+            <img src="https://via.placeholder.com/200x150/D4AF37/000000?text=Beard" alt="Beard">
+            <button onclick="selectServiceByName('Стрижка + Борода')">Хочу так же</button>
+        </div>
+    </div>
+
+    <div class="section-title">📅 Выберите день</div>
+    <div class="calendar" id="calendar">
+        </div>
+
+    <div class="section-title">👥 Кто придет?</div>
+    <div class="people-selector">
+        <div class="count-btn active" onclick="selectPeople(1, this)">1 чел</div>
+        <div class="count-btn" onclick="selectPeople(2, this)">2 чел</div>
+        <div class="count-btn" onclick="selectPeople(3, this)">3 чел</div>
+    </div>
+
+    <div class="section-title">⏰ Время (до 21:00)</div>
+    <div class="time-grid" id="time-grid"></div>
+
+    <div class="section-title">✂️ Услуги и цены</div>
+    <div id="services-container"></div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.MainButton.setParams({ color: '#D4AF37', text_color: '#000000' });
+
+        let selectedService = "";
+        let selectedPrice = "";
+        let selectedTime = "";
+        let selectedDay = "";
+        let peopleCount = 1;
+
+        // 1. АВТОМАТИЧЕСКИЙ КАЛЕНДАРЬ
+        const calendarEl = document.getElementById('calendar');
+        const weekDays = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+        
+        for (let i = 0; i < 7; i++) {
+            const date = new Date();
+            date.setDate(date.getDate() + i);
+            const dayName = weekDays[date.getDay()];
+            const dayNum = date.getDate();
+            const month = date.getMonth() + 1;
+            const fullDate = `${dayNum}.${month}`;
+
+            const dayCard = document.createElement('div');
+            dayCard.className = i === 0 ? 'day-card active' : 'day-card';
+            if(i === 0) selectedDay = fullDate;
+            dayCard.innerHTML = `${dayName}<br>${dayNum}`;
+            dayCard.onclick = function() {
+                document.querySelectorAll('.day-card').forEach(d => d.classList.remove('active'));
+                this.classList.add('active');
+                selectedDay = fullDate;
+            };
+            calendarEl.appendChild(dayCard);
+        }
+
+        // 2. УСЛУГИ
+        const services = [
+            { name: "Мужская стрижка", price: "80.000 сум" },
+            { name: "Детская стрижка (до 10 лет)", price: "60.000 сум" },
+            { name: "Стрижка + Борода", price: "150.000 сум" },
+            { name: "Камуфляж бороды и волос", price: "50.000 - 80.000 сум" },
+            { name: "Моделирование бороды", price: "50.000 сум" },
+            { name: "Окантовка", price: "30.000 сум" },
+            { name: "Мытьё головы", price: "25.000 сум" },
+            { name: "Чистка лица", price: "60.000 сум" },
+            { name: "Черная маска", price: "50.000 сум" },
+            { name: "Воск (1 зона)", price: "15.000 сум" },
+            { name: "Стрижка под машинку", price: "40.000 сум" }
+        ];
+
+        const container = document.getElementById('services-container');
+        services.forEach(s => {
+            const div = document.createElement('div');
+            div.className = 'service-card';
+            div.innerHTML = `<div class="service-info"><h3 data-name="${s.name}">${s.name}</h3><p>${s.price}</p></div>`;
+            div.onclick = function() {
+                document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedService = s.name;
+                selectedPrice = s.price;
+                updateMainButton();
+            };
+            container.appendChild(div);
+        });
+
+        // 3. ВРЕМЯ
+        const timeGrid = document.getElementById('time-grid');
+        for (let h = 10; h <= 20; h++) {
+            const slot = document.createElement('div');
+            slot.className = 'time-slot';
+            slot.innerText = `${h}:00`;
+            slot.onclick = function() {
+                document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedTime = this.innerText;
+                updateMainButton();
+            };
+            timeGrid.appendChild(slot);
+        }
+
+        function toggleCabinet(show) { document.getElementById('cabinet-modal').style.display = show ? 'block' : 'none'; }
+
+        function selectPeople(count, el) {
+            document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            peopleCount = count;
+            updateMainButton();
+        }
+
+        function selectServiceByName(name) {
+            const cards = document.querySelectorAll('.service-card');
+            cards.forEach(card => {
+                if(card.querySelector('h3').innerText === name) {
+                    card.click();
+                    card.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        }
+
+        function updateMainButton() {
+            if (selectedService && selectedTime) {
+                tg.MainButton.setText(`ЗАПИСАТЬСЯ: ${selectedTime} (${selectedDay})`);
+                tg.MainButton.show();
+            }
+        }
+
+        // ОТПРАВКА ДАННЫХ В БОТ
+        tg.onEvent('mainButtonClicked', function() {
+            const data = {
+                service: selectedService,
+                price: selectedPrice,
+                day: selectedDay,
+                time: selectedTime,
+                people: peopleCount
+            };
+            tg.sendData(JSON.stringify(data)); // Бот получит этот текст
+        });
+    </script>
+</body>
+</html>
